@@ -89,8 +89,8 @@ export function getActivePdf() {
     if (savedConfig.pdfDownloadUrl && savedConfig.pdfDownloadUrl !== siteConfig.pdfDownloadUrl) {
       return {
         url: savedConfig.pdfDownloadUrl,
-        fileName: savedConfig.pdfDownloadFileName || 'SHUBH_Marketing_Guide.pdf',
-        fileSize: savedConfig.fileSize || '2.4 MB',
+        fileName: savedConfig.pdfDownloadFileName || siteConfig.pdfDownloadFileName,
+        fileSize: savedConfig.fileSize || siteConfig.fileSize,
         isCustomUpload: false,
         updatedAt: 'Custom URL Set'
       }

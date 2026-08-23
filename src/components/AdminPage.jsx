@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { 
   Lock, KeyRound, Upload, Link as LinkIcon, FileText, 
-  Check, AlertCircle, RefreshCw, Eye, Save, Settings, ShieldCheck,
-  CheckCircle2, Sparkles, ArrowLeft
+  AlertCircle, RefreshCw, Eye, Save, Settings,
+  CheckCircle2, ArrowLeft, CreditCard
 } from 'lucide-react'
 import { saveUploadedPdf, getActivePdf, saveCustomConfig, resetAllToDefault, getSavedConfig } from '../utils/storage'
 
@@ -15,7 +15,7 @@ export default function AdminPage() {
   const [passwordError, setPasswordError] = useState(false)
 
   // Active state
-  const [activeTab, setActiveTab] = useState('upload') // 'upload' | 'link' | 'content'
+  const [activeTab, setActiveTab] = useState('upload') // 'upload' | 'link' | 'content' | 'payment'
   const [currentPdfInfo, setCurrentPdfInfo] = useState(null)
   
   // Form states
@@ -27,8 +27,12 @@ export default function AdminPage() {
 
   // Live content edit states
   const [brandName, setBrandName] = useState('')
+  const [authorName, setAuthorName] = useState('')
   const [priceTag, setPriceTag] = useState('')
+  const [originalPriceTag, setOriginalPriceTag] = useState('')
+  const [discountTag, setDiscountTag] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState('')
+  const [razorpayUrl, setRazorpayUrl] = useState('')
 
   const fileInputRef = useRef(null)
 
@@ -41,12 +45,15 @@ export default function AdminPage() {
     setCurrentPdfInfo(active)
     const config = getSavedConfig()
     setCloudUrl(config.pdfDownloadUrl || '')
-    setDownloadName(config.pdfDownloadFileName || 'SHUBH_Marketing_Guide.pdf')
+    setDownloadName(config.pdfDownloadFileName || 'Meta_Ads_Master_Course_Shubh_Marketing.pdf')
     setBrandName(config.brandName || 'SHUBH MARKETING')
-    setPriceTag(config.hero?.subPriceTag || '100% FREE')
+    setAuthorName(config.authorName || 'Shubham Gaur')
+    setPriceTag(config.price || config.hero?.subPriceTag || '₹249')
+    setOriginalPriceTag(config.originalPrice || config.hero?.subPriceOriginal || '₹1,999')
+    setDiscountTag(config.discountTag || '88% OFF (LIMITED TIME)')
     setWhatsappNumber(config.author?.whatsappNumber || '+91 80090 76122')
+    setRazorpayUrl(config.razorpayUrl || 'https://razorpay.me/@shubhamgaur3697')
   }
-
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault()
@@ -76,6 +83,7 @@ export default function AdminPage() {
     setUploadProgress(true)
     try {
       await saveUploadedPdf(selectedFile)
+      window.dispatchEvent(new Event('shubh_config_updated'))
       setSaveSuccessMsg('PDF successfully push ho gayi hai! Ab visitors yahi PDF download karenge.')
       setSelectedFile(null)
       refreshActiveState()
@@ -110,29 +118,39 @@ export default function AdminPage() {
     const finalUrl = formatCloudLink(cloudUrl)
     saveCustomConfig({
       pdfDownloadUrl: finalUrl,
-      pdfDownloadFileName: downloadName || 'SHUBH_Marketing_Guide.pdf'
+      pdfDownloadFileName: downloadName || 'Meta_Ads_Master_Course_Shubh_Marketing.pdf'
     })
+    window.dispatchEvent(new Event('shubh_config_updated'))
     setSaveSuccessMsg('Cloud PDF Link successfully update ho gaya!')
     refreshActiveState()
     setTimeout(() => setSaveSuccessMsg(''), 4000)
   }
 
-  // Handle saving live content
+  // Handle saving live content & price
   const handleSaveContent = () => {
     const prev = getSavedConfig()
     saveCustomConfig({
       ...prev,
       brandName: brandName,
+      authorName: authorName,
+      price: priceTag,
+      originalPrice: originalPriceTag,
+      discountTag: discountTag,
+      razorpayUrl: razorpayUrl,
       hero: {
         ...prev.hero,
         subPriceTag: priceTag,
+        subPriceOriginal: originalPriceTag,
       },
       author: {
         ...prev.author,
+        name: authorName,
         whatsappNumber: whatsappNumber,
+        razorpayUrl: razorpayUrl,
       }
     })
-    setSaveSuccessMsg('Content details successfully update ho gaye!')
+    window.dispatchEvent(new Event('shubh_config_updated'))
+    setSaveSuccessMsg('Price (₹), Content aur Razorpay details update ho gaye!')
     refreshActiveState()
     setTimeout(() => setSaveSuccessMsg(''), 4000)
   }
@@ -140,6 +158,7 @@ export default function AdminPage() {
   const handleReset = () => {
     if (window.confirm('Kya aap sabhi customizations reset karke default settings wapas lana chahte hain?')) {
       resetAllToDefault()
+      window.dispatchEvent(new Event('shubh_config_updated'))
       refreshActiveState()
       setSaveSuccessMsg('Sabhi settings default me reset ho gayi hain!')
       setTimeout(() => setSaveSuccessMsg(''), 4000)
@@ -164,7 +183,7 @@ export default function AdminPage() {
               <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5">
                 <span>SHUBH Admin</span>
               </h3>
-              <p className="text-[10px] text-stone-400">PDF & Content Management</p>
+              <p className="text-[10px] text-stone-400">Course & Payment Settings</p>
             </div>
           </div>
 
@@ -188,7 +207,7 @@ export default function AdminPage() {
             <div className="space-y-1">
               <h4 className="font-bold text-lg text-white">Admin Authentication</h4>
               <p className="text-xs text-stone-400">
-                Enter your secret security password to manage PDF and site settings.
+                Enter your secret security password to manage course PDF, price and Razorpay link.
               </p>
             </div>
 
@@ -208,7 +227,7 @@ export default function AdminPage() {
                 {passwordError && (
                   <p className="text-xs text-red-400 font-medium mt-2 flex items-center justify-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
-                    Incorrect password! Please try again.
+                    Incorrect password! (Default: shubhadmin8899)
                   </p>
                 )}
               </div>
@@ -237,7 +256,7 @@ export default function AdminPage() {
             {/* Current Active PDF Status Badge */}
             <div className="p-3 rounded-xl bg-stone-950 border border-stone-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
@@ -266,7 +285,7 @@ export default function AdminPage() {
             <div className="flex rounded-xl bg-stone-950 p-1 border border-stone-800">
               <button
                 onClick={() => setActiveTab('upload')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   activeTab === 'upload' 
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-stone-950 shadow-sm' 
                     : 'text-stone-400 hover:text-stone-200'
@@ -278,7 +297,7 @@ export default function AdminPage() {
 
               <button
                 onClick={() => setActiveTab('link')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   activeTab === 'link' 
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-stone-950 shadow-sm' 
                     : 'text-stone-400 hover:text-stone-200'
@@ -290,14 +309,14 @@ export default function AdminPage() {
 
               <button
                 onClick={() => setActiveTab('content')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   activeTab === 'content' 
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-stone-950 shadow-sm' 
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Edit Info</span>
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Pay & Info</span>
               </button>
             </div>
 
@@ -307,7 +326,7 @@ export default function AdminPage() {
                 <div className="text-xs text-stone-300 space-y-1">
                   <div className="font-bold text-amber-300">Push New PDF File</div>
                   <p className="text-[11px] text-stone-400 leading-relaxed">
-                    Nayi PDF file select karke "Push & Activate" par click karein. Visitors ke liye ye PDF immediately activate ho jayegi.
+                    Nayi PDF file select karke "Push & Activate" par click karein.
                   </p>
                 </div>
 
@@ -339,7 +358,7 @@ export default function AdminPage() {
                         Click to select PDF from device
                       </p>
                       <p className="text-[10px] text-stone-500">
-                        Format: .pdf (Up to 15MB)
+                        Format: .pdf (Up to 25MB)
                       </p>
                     </div>
                   )}
@@ -386,7 +405,7 @@ export default function AdminPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="SHUBH_Objection_Handling.pdf"
+                      placeholder="Meta_Ads_Master_Course_Shubh_Marketing.pdf"
                       value={downloadName}
                       onChange={(e) => setDownloadName(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 placeholder:text-stone-600 focus:outline-hidden focus:border-amber-400"
@@ -404,50 +423,132 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* TAB 3: Edit Info & Content */}
+            {/* TAB 3: Edit Info & Razorpay */}
             {activeTab === 'content' && (
-              <div className="space-y-3 p-3.5 rounded-xl bg-stone-950/70 border border-stone-800">
+              <div className="space-y-3.5 p-3.5 rounded-xl bg-stone-950/70 border border-stone-800">
                 <div className="text-xs text-stone-300 space-y-1">
-                  <div className="font-bold text-amber-300">Live Info & Contacts</div>
+                  <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                    <span>Price, Payment & Brand Controls</span>
+                  </div>
                   <p className="text-[11px] text-stone-400">
-                    Details update karein without coding.
+                    Yahan se aap direct Course ki price aur Razorpay details badal sakte hain.
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                {/* Price Preview Card */}
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
                   <div>
-                    <label className="text-[11px] font-semibold text-stone-400 block mb-1">
-                      Brand Name:
-                    </label>
-                    <input
-                      type="text"
-                      value={brandName}
-                      onChange={(e) => setBrandName(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 focus:outline-hidden focus:border-amber-400"
-                    />
+                    <span className="text-[10px] uppercase font-bold text-amber-300 block">
+                      Live Price Preview:
+                    </span>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xl font-black text-amber-400 font-mono">
+                        {priceTag || '₹249'}
+                      </span>
+                      <span className="text-xs text-stone-400 line-through">
+                        {originalPriceTag || '₹1,999'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {discountTag || '88% OFF'}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  
+                  {/* Pricing Inputs */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] font-bold text-amber-300 block mb-1">
+                        Selling Price (e.g. ₹249):
+                      </label>
+                      <input
+                        type="text"
+                        value={priceTag}
+                        onChange={(e) => setPriceTag(e.target.value)}
+                        placeholder="₹249"
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-amber-500/50 text-amber-300 font-bold font-mono focus:outline-hidden focus:border-amber-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-stone-400 block mb-1">
+                        Original Cut Price (e.g. ₹1,999):
+                      </label>
+                      <input
+                        type="text"
+                        value={originalPriceTag}
+                        onChange={(e) => setOriginalPriceTag(e.target.value)}
+                        placeholder="₹1,999"
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-300 font-mono focus:outline-hidden focus:border-amber-400"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-semibold text-stone-400 block mb-1">
-                      Price / Offer Badge (e.g. '100% FREE' ya 'SIRF ₹99 MEIN!'):
+                      Discount Offer Tag (e.g. 88% OFF):
                     </label>
                     <input
                       type="text"
-                      value={priceTag}
-                      onChange={(e) => setPriceTag(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 focus:outline-hidden focus:border-amber-400"
+                      value={discountTag}
+                      onChange={(e) => setDiscountTag(e.target.value)}
+                      placeholder="88% OFF (LIMITED TIME)"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-200 focus:outline-hidden focus:border-amber-400"
                     />
+                  </div>
+
+                  {/* Razorpay Gateway Link */}
+                  <div>
+                    <label className="text-[11px] font-bold text-sky-400 block mb-1">
+                      Razorpay Payment Link (UPI / Cards):
+                    </label>
+                    <input
+                      type="url"
+                      value={razorpayUrl}
+                      onChange={(e) => setRazorpayUrl(e.target.value)}
+                      placeholder="https://razorpay.me/@shubhamgaur3697"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-sky-500/40 text-sky-200 font-mono focus:outline-hidden focus:border-sky-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] font-semibold text-stone-400 block mb-1">
+                        Author Name:
+                      </label>
+                      <input
+                        type="text"
+                        value={authorName}
+                        onChange={(e) => setAuthorName(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 focus:outline-hidden focus:border-amber-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-stone-400 block mb-1">
+                        Brand Name:
+                      </label>
+                      <input
+                        type="text"
+                        value={brandName}
+                        onChange={(e) => setBrandName(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 focus:outline-hidden focus:border-amber-400"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-semibold text-stone-400 block mb-1">
-                      WhatsApp Number:
+                      WhatsApp Support Number:
                     </label>
                     <input
                       type="text"
                       value={whatsappNumber}
                       onChange={(e) => setWhatsappNumber(e.target.value)}
-                      placeholder="+919876543210"
+                      placeholder="+918009076122"
                       className="w-full px-3 py-2 text-xs rounded-lg bg-stone-900 border border-stone-700 text-stone-100 focus:outline-hidden focus:border-amber-400"
                     />
                   </div>
@@ -455,15 +556,15 @@ export default function AdminPage() {
 
                 <button
                   onClick={handleSaveContent}
-                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 text-stone-950 font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-950/40 transition-all"
                 >
                   <Save className="w-4 h-4" />
-                  <span>Update Content</span>
+                  <span>Update Price & Payment Settings</span>
                 </button>
               </div>
             )}
 
-            {/* Bottom Actions: Reset to Default & Go to Site */}
+            {/* Bottom Actions */}
             <div className="pt-2 border-t border-stone-800 flex items-center justify-between">
               <button
                 onClick={handleReset}
@@ -488,3 +589,4 @@ export default function AdminPage() {
     </div>
   )
 }
+

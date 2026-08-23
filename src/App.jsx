@@ -8,11 +8,11 @@ import AuthorProfile from './components/AuthorProfile'
 import FAQ from './components/FAQ'
 import StickyCTA from './components/StickyCTA'
 import DownloadToast from './components/DownloadToast'
+import PaymentModal from './components/PaymentModal'
 import AdminPage from './components/AdminPage'
 import Footer from './components/Footer'
 import { getActivePdf, getSavedConfig } from './utils/storage'
 import { MessageCircle } from 'lucide-react'
-
 
 export default function App() {
   const [isAdminRoute, setIsAdminRoute] = useState(false)
@@ -20,17 +20,26 @@ export default function App() {
   const [activePdf, setActivePdf] = useState(getActivePdf())
   const [isDownloading, setIsDownloading] = useState(false)
   const [showToast, setShowToast] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
-  // Detect /admin or #admin in URL
+  // Detect /admin or #admin or ?paid=true in URL
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname.toLowerCase()
       const hash = window.location.hash.toLowerCase()
-      if (path === '/admin' || path === '/admin/' || hash === '#admin' || hash === '#/admin' || window.location.search.includes('admin=true')) {
+      const search = window.location.search.toLowerCase()
+
+      if (path === '/admin' || path === '/admin/' || hash === '#admin' || hash === '#/admin' || search.includes('admin=true')) {
         setIsAdminRoute(true)
       } else {
         setIsAdminRoute(false)
       }
+
+      // Auto-unlock if user is returning with paid=true or #download
+      if (search.includes('paid=true') || hash === '#download') {
+        handleDownload()
+      }
+
       setConfig(getSavedConfig())
       setActivePdf(getActivePdf())
     }
@@ -38,11 +47,19 @@ export default function App() {
     checkRoute()
     window.addEventListener('popstate', checkRoute)
     window.addEventListener('hashchange', checkRoute)
+    window.addEventListener('storage', checkRoute)
+    window.addEventListener('shubh_config_updated', checkRoute)
     return () => {
       window.removeEventListener('popstate', checkRoute)
       window.removeEventListener('hashchange', checkRoute)
+      window.removeEventListener('storage', checkRoute)
+      window.removeEventListener('shubh_config_updated', checkRoute)
     }
   }, [])
+
+  const handleOpenBuyModal = () => {
+    setIsPaymentModalOpen(true)
+  }
 
   const handleDownload = () => {
     setIsDownloading(true)
@@ -79,7 +96,7 @@ export default function App() {
 
   // 2. Otherwise render clean public landing page for visitors
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 font-sans antialiased selection:bg-orange-500/20 selection:text-orange-950 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#faf8f5] text-stone-900 font-sans antialiased selection:bg-[#1877f2]/20 selection:text-blue-950 flex flex-col justify-between">
       
       {/* Toast Notification when Download triggers */}
       <DownloadToast 
@@ -88,61 +105,74 @@ export default function App() {
         pdfInfo={activePdf}
       />
 
+      {/* Razorpay Payment & Checkout Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onDownloadSuccess={() => {
+          handleDownload()
+        }}
+        pdfInfo={activePdf}
+        config={config}
+      />
+
       {/* Main Mobile App Frame */}
       <main className="w-full max-w-md mx-auto min-h-screen bg-[#fffdfa] shadow-2xl shadow-stone-950/10 flex flex-col">
         
         {/* Header */}
         <Header config={config} />
 
-        {/* Hero Section with 3D Book & Orange Banner */}
+        {/* Hero Section with 3D Book & Meta Blue Banner */}
         <BannerHero 
           config={config}
-          onDownload={handleDownload} 
-          isDownloading={isDownloading} 
+          onBuy={handleOpenBuyModal} 
         />
 
-        {/* Pain Points (👉 Struggling with leads & objections) */}
+        {/* Pain Points (👉 Business Owners & Students) */}
         <PainPoints 
-          onDownload={handleDownload} 
+          config={config}
+          onBuy={handleOpenBuyModal} 
         />
 
-        {/* What You'll Get (📌 Ebook, Scripts, Strategy) */}
+        {/* What You'll Get (📌 222 Pages Notes, 31 Lessons, Pixel Strategy) */}
         <WhatYouGet 
-          onDownload={handleDownload} 
+          config={config}
+          onBuy={handleOpenBuyModal} 
         />
 
-        {/* Chapters & Index Breakdown */}
-        <ChaptersBreakdown />
+        {/* Chapters & 31 Lessons Breakdown */}
+        <ChaptersBreakdown config={config} />
 
-        {/* Author / SHUBH Marketing Trust Card */}
+        {/* Author / Shubham Gaur Trust Card */}
         <AuthorProfile config={config} />
 
         {/* FAQ Section */}
-        <FAQ />
+        <FAQ config={config} />
 
-        {/* Clean Footer (No admin buttons) */}
+        {/* Clean Footer */}
         <Footer config={config} />
       </main>
 
       {/* Floating WhatsApp Quick Connect Button */}
       <a
-        href={`https://wa.me/${(config.author?.whatsappNumber || '918009076122').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(config.author?.whatsappMessage || 'Hi SHUBH, Mujhe Objection Handling PDF chahiye.')}`}
+        href={`https://wa.me/${(config.author?.whatsappNumber || '918009076122').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(config.author?.whatsappMessage || 'Hi Shubham, Maine Meta Ads Course ka payment kiya hai (₹249).')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-4 z-40 w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl shadow-emerald-950/30 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 border-2 border-white animate-pulse"
-        title="Chat on WhatsApp"
+        title="Chat with Shubham Gaur on WhatsApp"
       >
         <MessageCircle className="w-6 h-6 fill-white" />
       </a>
 
-      {/* Persistent Bottom Download Bar */}
+      {/* Persistent Bottom Sticky Buy Bar */}
       <StickyCTA 
         config={config}
         pdfInfo={activePdf}
-        onDownload={handleDownload} 
+        onBuy={handleOpenBuyModal} 
         isDownloading={isDownloading} 
       />
     </div>
   )
 }
+
 

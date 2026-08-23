@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle2, Download, FileText, X, Sparkles } from 'lucide-react'
+import { CheckCircle2, FileText, X, Sparkles } from 'lucide-react'
 import { siteConfig } from '../config'
 
 export default function DownloadToast({ isOpen, onClose, pdfInfo }) {

@@ -1,9 +1,10 @@
 import React from 'react'
 import { siteConfig } from '../config'
-import { CheckCircle2, Gift, FileText } from 'lucide-react'
+import { Gift, ArrowRight } from 'lucide-react'
 
-export default function WhatYouGet({ onDownload }) {
-  const { whatYouGet } = siteConfig
+export default function WhatYouGet({ onBuy, config }) {
+  const currentConfig = config || siteConfig
+  const { whatYouGet, price } = currentConfig
 
   return (
     <section className="w-full px-4 py-4 max-w-md mx-auto">
@@ -12,20 +13,20 @@ export default function WhatYouGet({ onDownload }) {
         {/* Section Heading */}
         <div className="space-y-1">
           <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight font-serif flex items-center gap-2">
-            <Gift className="w-5 h-5 text-orange-600" />
-            What You'll Get:
+            <Gift className="w-5 h-5 text-[#1877f2]" />
+            What You'll Get Inside:
           </h2>
           <p className="text-xs text-stone-600">
-            Is complete guide mein aapko milenge tested blueprints & practical scripts:
+            Is 222-page practical course mein aapko milenge step-by-step master blueprints:
           </p>
         </div>
 
-        {/* What You Get Points with Pushpin Icon 📌 (Exact match from screenshot) */}
+        {/* What You Get Points with Pushpin Icon 📌 */}
         <div className="space-y-3">
           {whatYouGet.map((item) => (
             <div 
               key={item.id}
-              className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-stone-200/80 shadow-xs hover:border-amber-400/70 transition-all group"
+              className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-stone-200/80 shadow-2xs hover:border-[#1877f2]/50 hover:shadow-xs transition-all group"
             >
               <span className="text-xl shrink-0 select-none pt-0.5 group-hover:scale-110 transition-transform">
                 📌
@@ -42,7 +43,17 @@ export default function WhatYouGet({ onDownload }) {
           ))}
         </div>
 
+        {/* Mini CTA */}
+        <button
+          onClick={onBuy}
+          className="w-full py-3 rounded-xl bg-blue-50 hover:bg-blue-100/80 border border-blue-300 text-blue-900 font-extrabold text-xs uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
+        >
+          <span>Get Instant Access to All 6 Modules ({price || '₹249'})</span>
+          <ArrowRight className="w-4 h-4 text-blue-700" />
+        </button>
+
       </div>
     </section>
   )
 }
+
