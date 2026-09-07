@@ -21,22 +21,38 @@ export default function App() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [modalInitialStep, setModalInitialStep] = useState('checkout')
+  const [paymentRefId, setPaymentRefId] = useState('')
 
-  // Detect /admin or #admin or ?paid=true in URL
+  // Detect /admin or Razorpay payment redirect (e.g. ?razorpay_payment_id=... or ?payment=success)
   useEffect(() => {
-    const checkRoute = () => {
+    const checkRouteAndPayment = () => {
       const path = window.location.pathname.toLowerCase()
       const hash = window.location.hash.toLowerCase()
-      const search = window.location.search.toLowerCase()
+      const searchParams = new URLSearchParams(window.location.search)
 
-      if (path === '/admin' || path === '/admin/' || hash === '#admin' || hash === '#/admin' || search.includes('admin=true')) {
+      if (path === '/admin' || path === '/admin/' || hash === '#admin' || hash === '#/admin' || searchParams.has('admin')) {
         setIsAdminRoute(true)
       } else {
         setIsAdminRoute(false)
       }
 
-      // Auto-unlock if user is returning with paid=true or #download
-      if (search.includes('paid=true') || hash === '#download') {
+      // Check if user is redirected back from Razorpay after successful payment
+      const rzpPaymentId = searchParams.get('razorpay_payment_id') || searchParams.get('payment_id')
+      const rzpStatus = searchParams.get('razorpay_payment_link_status') || searchParams.get('payment') || searchParams.get('status')
+      const isPaidFlag = searchParams.get('paid') === 'true' || hash === '#download'
+
+      if (rzpPaymentId || rzpStatus === 'paid' || rzpStatus === 'success' || isPaidFlag) {
+        const refId = rzpPaymentId || 'Verified Razorpay Payment'
+        setPaymentRefId(refId)
+        try {
+          localStorage.setItem('shubh_meta_ads_paid', 'true')
+          localStorage.setItem('shubh_payment_ref', refId)
+        } catch (e) {
+          console.warn(e)
+        }
+        setModalInitialStep('download_ready')
+        setIsPaymentModalOpen(true)
         handleDownload()
       }
 
@@ -44,20 +60,21 @@ export default function App() {
       setActivePdf(getActivePdf())
     }
 
-    checkRoute()
-    window.addEventListener('popstate', checkRoute)
-    window.addEventListener('hashchange', checkRoute)
-    window.addEventListener('storage', checkRoute)
-    window.addEventListener('shubh_config_updated', checkRoute)
+    checkRouteAndPayment()
+    window.addEventListener('popstate', checkRouteAndPayment)
+    window.addEventListener('hashchange', checkRouteAndPayment)
+    window.addEventListener('storage', checkRouteAndPayment)
+    window.addEventListener('shubh_config_updated', checkRouteAndPayment)
     return () => {
-      window.removeEventListener('popstate', checkRoute)
-      window.removeEventListener('hashchange', checkRoute)
-      window.removeEventListener('storage', checkRoute)
-      window.removeEventListener('shubh_config_updated', checkRoute)
+      window.removeEventListener('popstate', checkRouteAndPayment)
+      window.removeEventListener('hashchange', checkRouteAndPayment)
+      window.removeEventListener('storage', checkRouteAndPayment)
+      window.removeEventListener('shubh_config_updated', checkRouteAndPayment)
     }
   }, [])
 
   const handleOpenBuyModal = () => {
+    setModalInitialStep('checkout')
     setIsPaymentModalOpen(true)
   }
 
@@ -114,6 +131,8 @@ export default function App() {
         }}
         pdfInfo={activePdf}
         config={config}
+        initialStep={modalInitialStep}
+        paymentRef={paymentRefId}
       />
 
       {/* Main Mobile App Frame */}

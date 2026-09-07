@@ -14,6 +14,12 @@ export function getSavedConfig() {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS)
     if (saved) {
       const parsed = JSON.parse(saved)
+      if (parsed.tagline && (parsed.tagline.includes('Secure Your Career') || parsed.tagline.includes('Empowering Network'))) {
+        delete parsed.tagline
+      }
+      if (parsed.hero?.subPriceTag && (parsed.hero.subPriceTag.includes('249') || parsed.hero.subPriceTag.includes('100%'))) {
+        delete parsed.hero.subPriceTag
+      }
       return { ...siteConfig, ...parsed }
     }
   } catch (e) {

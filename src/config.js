@@ -11,7 +11,7 @@ export const siteConfig = {
   brandName: "SHUBH MARKETING",
   authorName: "Shubham Gaur",
   topCategoryBadge: "🔥 COMPLETE META ADS MASTER NOTES",
-  tagline: "Facebook & Instagram Ads Mastery — Secure Your Career & Scale Any Business",
+  tagline: "Learn facebook instagram marketing anytime anywhere",
 
   // 📄 PDF & Product Settings
   pdfDownloadUrl: "/Meta_Ads_Master_Course.pdf", // Located in public/ folder
@@ -33,7 +33,7 @@ export const siteConfig = {
     headlineMain: "GET COMPLETE FACEBOOK & INSTAGRAM",
     headlineHighlight: "META ADS MASTER COURSE",
     headlineEnd: "BEGINNER TO ADVANCED",
-    subPriceTag: "₹249 ONLY",
+    subPriceTag: "Beginners to advanced full course pdf",
     subPriceOriginal: "₹1,999",
     instantAccessTag: "INSTANT PDF DOWNLOAD",
     bookTitle: "META ADS MASTER GUIDE",

@@ -39,27 +39,23 @@ export default function BannerHero({ onBuy, config }) {
         {/* Main 3D Book & Offer Graphic Area */}
         <div className="relative my-2 py-3 flex items-center justify-between gap-2">
           
-          {/* Left Side: Pricing / Access Badge */}
+          {/* Left Side: Course Notes Badge */}
           <div className="flex-1 flex flex-col items-center justify-center text-center z-10 space-y-2">
-            <div className="bg-gradient-to-b from-stone-900/90 to-stone-950/90 backdrop-blur-md p-3 rounded-xl border border-amber-400/50 w-full shadow-lg">
-              <span className="text-[10px] font-black tracking-wider uppercase text-amber-300 block">
-                SPECIAL LAUNCH PRICE
+            <div className="bg-gradient-to-b from-stone-900/90 to-stone-950/90 backdrop-blur-md p-3.5 rounded-xl border border-amber-400/50 w-full shadow-lg flex flex-col items-center justify-center text-center min-h-[110px]">
+              <span className="text-[10px] font-black tracking-wider uppercase text-amber-300 block mb-1.5">
+                COMPLETE NOTES
               </span>
-              <div className="text-3xl sm:text-[32px] font-black text-amber-400 drop-shadow-md leading-none my-1.5 font-mono">
-                {hero.subPriceTag || currentConfig.price || '₹249'}
-              </div>
-              <div className="text-[11px] text-stone-400 line-through opacity-90">
-                Original Price {hero.subPriceOriginal || currentConfig.originalPrice || '₹1,999'}
-              </div>
-              <div className="mt-1 text-[9px] font-extrabold text-emerald-400 uppercase bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                SAVE 88% TODAY
+              <div className="text-xs sm:text-[13px] font-black text-white uppercase leading-snug tracking-tight">
+                {hero.subPriceTag && !hero.subPriceTag.includes('249') && !hero.subPriceTag.includes('100%')
+                  ? hero.subPriceTag
+                  : "Beginners to advanced full course pdf"}
               </div>
             </div>
 
             {/* Instant Access Pill Badge */}
             <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[10px] sm:text-[11px] font-black tracking-wider uppercase shadow-md border border-emerald-400/40">
               <Zap className="w-3 h-3 text-amber-300 fill-amber-300" />
-              <span>{hero.instantAccessTag}</span>
+              <span>{hero.instantAccessTag || 'INSTANT PDF DOWNLOAD'}</span>
             </div>
           </div>
 

@@ -6,17 +6,24 @@ import {
 } from 'lucide-react'
 import { siteConfig } from '../config'
 
-export default function PaymentModal({ isOpen, onClose, onDownloadSuccess, pdfInfo, config }) {
+export default function PaymentModal({ isOpen, onClose, onDownloadSuccess, pdfInfo, config, initialStep = 'checkout', paymentRef = '' }) {
   const currentConfig = config || siteConfig
-  const [step, setStep] = useState('checkout') // 'checkout' | 'paid_verify' | 'download_ready'
+  const [step, setStep] = useState(initialStep) // 'checkout' | 'paid_verify' | 'download_ready'
   const [formData, setFormData] = useState({
     name: '',
     whatsapp: '',
     email: '',
-    utr: ''
+    utr: paymentRef || ''
   })
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Sync step if initialStep changes (e.g. redirected with payment=success)
+  React.useEffect(() => {
+    if (initialStep) {
+      setStep(initialStep)
+    }
+  }, [initialStep])
 
   if (!isOpen) return null
 

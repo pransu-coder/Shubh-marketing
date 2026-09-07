@@ -21,7 +21,9 @@ export default function Header({ config }) {
         </h1>
 
         <p className="text-xs text-stone-600 font-medium mt-1">
-          {currentConfig.tagline}
+          {currentConfig.tagline && !currentConfig.tagline.includes('Secure Your Career') && !currentConfig.tagline.includes('Empowering Network')
+            ? currentConfig.tagline
+            : "Learn facebook instagram marketing anytime anywhere"}
         </p>
 
       </div>
